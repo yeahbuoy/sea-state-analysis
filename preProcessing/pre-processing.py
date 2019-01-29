@@ -14,10 +14,19 @@ def crop_and_split(im):
 		#plt.imshow(sub_im, interpolation='nearest')
 	#plt.show()
 	return sub_images
-	
+
+def visible(im):
+	if np.median(im) >= 50:
+		return True
+	else:
+		return False
+
 if __name__ == "__main__":
-	#im = Image.open("../data/pictures/41001_2016_03_11_1210.jpg")
-	#crop_and_split(im)
-	
 	im = io.imread("../data/pictures/41001_2016_03_11_1210.jpg")
-	crop_and_split_2(im)
+	crop_and_split(im)
+	print(visible(im))
+	
+	im = io.imread("../data/pictures/41001_2016_03_11_0010.jpg")
+	crop_and_split(im)
+	# should be dark
+	print(visible(im))
