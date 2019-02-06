@@ -190,9 +190,11 @@ for picture in listOfPics:
             if (wavLine[1] != ""):
                 tempRow.append(wavLine[1])
                 hadWave = True
+            else:
+                tempRow.append("")
             break
 
-    if(hadWind and hadWave):
+    if(hadWind):
         ## get BeafortForce from wind
         tempRow.append(getBeaufortForceFromWind(tempRow[1]))
         newList.append(tempRow)
@@ -203,4 +205,3 @@ myFile = open(NewFileName, 'w')
 with myFile:
     writer = csv.writer(myFile)
     writer.writerows(newList)
-
