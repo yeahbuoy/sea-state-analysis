@@ -46,7 +46,7 @@ def getWaveList2D():
                 line_count += 1
             else:
                 tempRow.append(row[0])  # this will be the datetime
-                tempRow.append(row[3])  # this will be the wind speed in m/s
+                tempRow.append(row[4])  # this will be the wind speed in m/s
                 tempList.append(tempRow)
                 line_count += 1
 
@@ -87,10 +87,90 @@ def isWaveTimeTheSame(pictureTime, dataTime):
         return False
 
 
+def getBeaufortForceFromWind(windFloat):
+    knots = convertToKnots(windFloat)
+
+    if(knots < 1):
+        return 0
+    elif(knots < 4):
+        return 1
+    elif (knots < 7):
+        return 2
+    elif (knots < 11):
+        return 3
+    elif (knots < 17):
+        return 4
+    elif (knots < 22):
+        return 5
+    elif (knots < 28):
+        return 6
+    elif (knots < 34):
+        return 7
+    elif (knots < 41):
+        return 8
+    elif (knots < 48):
+        return 9
+    elif (knots < 56):
+        return 10
+    elif (knots < 64):
+        return 11
+    elif (knots >= 64):
+        return 12
+
+def getBeaufortForceFromWave(waveFloat):
+
+    ## comments reference actual scale (which has several overlaps)
+
+    if(waveFloat < .1):
+        ##sea like mirror
+        return 0
+    elif(waveFloat < .2):
+        ## .1
+        return 1
+    elif (waveFloat < .6):
+        ## .2 - .3
+        return 2
+    elif (waveFloat < 1):
+        ## .6 - 1
+        return 3
+    elif (waveFloat < 2):
+        ## 1 - 1.5
+        return 4
+    elif (waveFloat < 3):
+        ## 2 - 2.5
+        return 5
+    elif (waveFloat < 4):
+        ## 3 - 4
+        return 6
+    elif (waveFloat < 5.5):
+        ## 4 - 5.5
+        return 7
+    elif (waveFloat < 7.5):
+        ## 5.5 - 7.5
+        return 8
+    elif (waveFloat < 10):
+        ## 7 - 10
+        return 9
+    elif (waveFloat < 12.5):
+        ## 9 - 12.5
+        return 10
+    elif (waveFloat < 16):
+        ## 11.5 - 16
+        return 11
+    elif (waveFloat >= 16):
+        ## POSEIDON's WRATH
+        return 12
+
+def convertToKnots(WindMS):
+    return (float(WindMS)*1.943844)
+
+
 
 newList = []
 windList = getWindList2D()
 waveList = getWaveList2D()
+firstRow = ["PictureName", "WindSpeed(m/s)", "WaveHeight(m)", "BeaufortForce"]
+newList.append(firstRow)
 
 for picture in listOfPics:
     tempRow = []
@@ -113,6 +193,8 @@ for picture in listOfPics:
             break
 
     if(hadWind and hadWave):
+        ## get BeafortForce from wind
+        tempRow.append(getBeaufortForceFromWind(tempRow[1]))
         newList.append(tempRow)
 
 
@@ -121,3 +203,4 @@ myFile = open(NewFileName, 'w')
 with myFile:
     writer = csv.writer(myFile)
     writer.writerows(newList)
+
