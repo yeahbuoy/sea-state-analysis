@@ -37,11 +37,13 @@ def load_dataset(path, dataPath):
 		if not visible(im):
 			continue
 		subimages.append(crop_and_split(im))
-		beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['BeaufortForce']
+		#beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['BeaufortForce']
+		beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['WindSpeed(m/s)']
 		for i in range(6):
 			output.append(beaufortNumber)
 	xdata = np.concatenate(subimages, axis=0)
-	return xdata, output
+	ydata = np.asarray(output)
+	return xdata, ydata
 
 
 
