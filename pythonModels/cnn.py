@@ -7,13 +7,10 @@ Taken from https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py
 '''
 
 from __future__ import print_function
-import keras
-from keras.datasets import mnist
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
-from keras.utils import plot_model
 from sklearn.model_selection import train_test_split
 from preProcessing import preProcessing
 import numpy as np
