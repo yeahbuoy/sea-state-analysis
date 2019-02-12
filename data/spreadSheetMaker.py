@@ -5,50 +5,57 @@ import csv
 # this script assumes that all the picture are already in a folder within the same directory as this script
 # also assumes that all the data is using the same naming schemes (such as all photos are labeled with
 
-PicturesDir = "Pictures"
-WindFile = "41001_201812061335-WIND.csv"
-WaveFile = "41001_201812061340-WAVE.csv"
+PicturesDirs = ["Pictures","Pictures 2-8-19"]
+WindFiles = ["41001_201812061335-WIND.csv","41048_201902061931 -WIND.csv"]
+WaveFiles = ["41001_201812061340-WAVE.csv","41048_201902061917 -WAVE.csv"]
 NewFileName = "CoolSpreadSheet.csv"
 
+def getListofPics():
+    finalList = []
+    for pics in PicturesDirs:
+        tempList = os.listdir(pics)
+        finalList += tempList
 
-listOfPics = os.listdir(PicturesDir)
+    return finalList
 
 
 def getWindList2D():
 
     tempList = []
-    with open(WindFile) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-        for row in csv_reader:
-            tempRow = []
-            if line_count == 0:
-                print("")
-                line_count += 1
-            else:
-                tempRow.append(row[0])  # this will be the datetime
-                tempRow.append(row[1])  # this will be the wind speed in m/s
-                tempList.append(tempRow)
-                line_count += 1
+    for fileName in WindFiles:
+        with open(fileName) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                tempRow = []
+                if line_count == 0:
+                    print("")
+                    line_count += 1
+                else:
+                    tempRow.append(row[0])  # this will be the datetime
+                    tempRow.append(row[1])  # this will be the wind speed in m/s
+                    tempList.append(tempRow)
+                    line_count += 1
 
     return tempList
 
 def getWaveList2D():
 
     tempList = []
-    with open(WaveFile) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-        for row in csv_reader:
-            tempRow = []
-            if line_count == 0:
-                print("")
-                line_count += 1
-            else:
-                tempRow.append(row[0])  # this will be the datetime
-                tempRow.append(row[4])  # this will be the wind speed in m/s
-                tempList.append(tempRow)
-                line_count += 1
+    for fileName in WaveFiles:
+        with open(fileName) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                tempRow = []
+                if line_count == 0:
+                    print("")
+                    line_count += 1
+                else:
+                    tempRow.append(row[0])  # this will be the datetime
+                    tempRow.append(row[4])  # this will be the wind speed in m/s
+                    tempList.append(tempRow)
+                    line_count += 1
 
     return tempList
 
@@ -171,6 +178,7 @@ windList = getWindList2D()
 waveList = getWaveList2D()
 firstRow = ["PictureName", "WindSpeed(m/s)", "WaveHeight(m)", "BeaufortForce"]
 newList.append(firstRow)
+listOfPics = getListofPics()
 
 for picture in listOfPics:
     tempRow = []
