@@ -8,7 +8,7 @@ I=imresize(I,[272 479]);
 I = rgb2gray(I);
 avg = filter2(fspecial('average',7),I)/255;
 
-% use oshu algorithm to find the threshold
+% use ostu algorithm to find the threshold
 level = graythresh(avg);
 
 % convert the image to binary using the threshold
