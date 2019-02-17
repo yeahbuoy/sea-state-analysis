@@ -5,7 +5,7 @@ import csv
 # this script assumes that all the picture are already in a folder within the same directory as this script
 # also assumes that all the data is using the same naming schemes (such as all photos are labeled with
 
-PicturesDirs = ["Pictures","Pictures 2-8-19"]
+PicturesDirs = ["Pictures"]
 WindFiles = ["41001_201812061335-WIND.csv","41048_201902061931 -WIND.csv"]
 WaveFiles = ["41001_201812061340-WAVE.csv","41048_201902061917 -WAVE.csv"]
 NewFileName = "CoolSpreadSheet.csv"
