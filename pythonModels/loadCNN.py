@@ -44,7 +44,8 @@ x_data /= np.std(x_data)
 X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1)
 
 model = load_model('savedModel.h5')
-model.evaluate(X_test, y_test, batch_size=None, verbose=1)
+score = model.evaluate(X_test, y_test)
+print(score)
 '''
 model.add(Conv2D(16, kernel_size=(3,3), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))

@@ -62,6 +62,10 @@ model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=
 predict = model.predict(X_test)
 for pred, y in zip(predict, y_test):
     print("Predict: {}\t Actual: {}".format(pred, y))
+
+model.save('savedModel.h5')
+score = model.evaluate(X_test, y_test)
+print(score)
 '''
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
