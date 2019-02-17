@@ -8,6 +8,7 @@ Taken from https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py
 
 from __future__ import print_function
 from keras.models import Sequential
+from keras.models import load_model
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
