@@ -7,6 +7,7 @@ Taken from https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py
 '''
 
 from __future__ import print_function
+from apscheduler.schedulers.blocking import BlockingScheduler
 from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Dense, Dropout, Flatten
@@ -15,9 +16,12 @@ from keras import backend as K
 from sklearn.model_selection import train_test_split
 from preProcessing import preProcessing
 import numpy as np
+import datetime
+import csv
 
 CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
+fileName = "SoakTestResults.csv"
 
 batch_size = 128
 num_classes = 10
@@ -28,71 +32,74 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
-x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE)
+sched = BlockingScheduler()
 
-if K.image_data_format() == 'channels_first':
-    x_data = x_data.reshape(x_data.shape[0], 3, img_rows, img_cols)
-    input_shape = (3, img_rows, img_cols)
-
-else:
-    x_data = x_data.reshape(x_data.shape[0], img_rows, img_cols, 3)
-    input_shape = (img_rows, img_cols, 3)
+## reset file
+myFile = open(fileName, 'w')
+myFile.close()
 
 
-x_data = x_data.astype('float32')
-x_data -= np.mean(x_data)
-x_data /= np.std(x_data)
-X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1)
+def LoadAndTest():
+    global model
+    x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE)
 
-model = load_model('savedModel.h5')
-score = model.evaluate(X_test, y_test)
-print(score)
-'''
-model.add(Conv2D(16, kernel_size=(3,3), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(32, kernel_size=(3,3), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(16, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(4, activation='relu'))
-model.add(Dense(1, activation='linear'))
+    if K.image_data_format() == 'channels_first':
+        x_data = x_data.reshape(x_data.shape[0], 3, img_rows, img_cols)
+        input_shape = (3, img_rows, img_cols)
 
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
+    else:
+        x_data = x_data.reshape(x_data.shape[0], img_rows, img_cols, 3)
+        input_shape = (img_rows, img_cols, 3)
 
-predict = model.predict(X_test)
-for pred, y in zip(predict, y_test):
-    print("Predict: {}\t Actual: {}".format(pred, y))
 
-model.save('savedModel.hd5')
+    x_data = x_data.astype('float32')
+    x_data -= np.mean(x_data)
+    x_data /= np.std(x_data)
+    X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1)
+    model = load_model('savedModel.h5')
+    score = model.evaluate(X_test, y_test)
+    recordResults(score)
 
-model = Sequential()
-model.add(Conv2D(32, kernel_size=(3, 3),
-                 activation='relu',
-                 input_shape=input_shape))
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-model.add(Flatten())
-model.add(Dense(128, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(num_classes, activation='softmax'))
+def recordResults(score):
+    newList = []
+    firstRow = ["DateTime","Loss"]
+    newList.append(firstRow)
+    currList = getRecordedList2D()
+    newList += currList
+    newRow = [datetime.datetime.now(),score]
+    newList.append(newRow)
 
-model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adadelta(),
-              metrics=['accuracy'])
+    myFile = open(fileName, 'w')
+    with myFile:
+        writer = csv.writer(myFile)
+        writer.writerows(newList)
+    myFile.close()
 
-# plot_model(model)
 
-model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          verbose=1,
-          validation_data=(x_test, y_test))
-score = model.evaluate(x_test, y_test, verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
-'''
+
+def getRecordedList2D():
+    tempList = []
+    with open(fileName) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            tempRow = []
+            if line_count == 0:
+                print("")
+                line_count += 1
+            else:
+                if(len(row) != 0):
+                    tempRow.append(row[0])  # this will be the datetime
+                    tempRow.append(row[1])  # this will be the loss/ results of the test
+                    tempList.append(tempRow)
+                    line_count += 1
+
+    return tempList
+
+@sched.scheduled_job('interval', minutes=10)
+def timed_job():
+    LoadAndTest()
+    print("results recorded")
+
+
+sched.start()
