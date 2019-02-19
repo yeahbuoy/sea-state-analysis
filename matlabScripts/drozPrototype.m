@@ -1,18 +1,28 @@
+% Dr. Droz Horizon Prototype
+
 % Initialization
+picDirectory = '../data/Pictures/';
+dataDirectory = '../data/';
+
 f = pwd;
-chf = 0; chnf = 0;
-fwind = dir(fullfile(f,'*WIND*.csv'));
-fwave = dir(fullfile(f,'*WAVE*.csv'));
-d = dir(fullfile(f,'41001*.jpg'));
+chf = 0; 
+chnf = 0;
+
+fwind = dir(fullfile(f, '*WIND*.csv'));
+fwave = dir(fullfile(f, '*WAVE*.csv'));
+
+d = dir(fullfile(f, picDirectory, '41001*.jpg'));
 nd = length(d); 
+
 ncpsi = 480; % #columns per subimage
 nrvp  = 270; % #valid pixel rows (not footer)
 iBlank = false(nd,1);
+
 % Read CSV spreadsheets
 delimiter = ',';
 startRow = 2;
 formatSpec = '%q%f%f%f%f%*s%*s%*s%*s%*s%*s%[^\n\r]';
-fileID = fopen(fwind.name,'r');
+fileID = fopen(fwind.name, 'r');
 windArray = textscan(fileID, formatSpec, 'Delimiter', delimiter, 'TextType', 'string', 'EmptyValue', NaN, 'HeaderLines' ,startRow-1, 'ReturnOnError', false, 'EndOfLine', '\r\n');
 datestr = windArray{1}; 
 windDnum = datenum(datestr,'mm/dd/yyyy HHMM');
@@ -28,14 +38,16 @@ waveDnum = datenum(datestr,'mm/dd/yyyy HHMM');
 signWaveHeight = dataArray{4}; 
 windWaveHeight = dataArray{5}; 
 aimgDnum = zeros(nd,1);
+
 % Import image files and separate into 6 subimages
 for i = 1:nd % For each image
-    I = imread(d(i).name);
+    I = imread(strcat(picDirectory, d(i).name));
     if all(I(1:10,1:10,:)<6) % Blank image; skip
         iBlank(i) = true;
     end
     aimgDnum(i) = datenum(d(i).name(7:end-4),'yyyy_mm_dd_HHMM');
-end                                             
+end                
+
 iValid = find(~iBlank);
 nvi = length(iValid); % #valid images
 vimgDnum = aimgDnum(iValid);
@@ -49,7 +61,8 @@ vimgDnum = aimgDnum(iValid);
 J = cell(nvi,6); S = J;
 for i = 1:nvi % For each Valid Image
     s = d(iValid(i)).name;
-    I = imread(s);
+    I = imread(strcat(picDirectory, s));
+    
     for j = 1:6 % For each subimage (of 6)
         J{i,j} = I(1:nrvp,((j-1)*ncpsi+1):(j*ncpsi),:);
         K = rgb2gray(J{i,j});
@@ -82,10 +95,11 @@ for i = 1:nvi % For each Valid Image
             	max_len = len;
             	xy_long = xy;
         	end
-    	end
+        end
+        
     	%highlight the longest line segment
-   	plot(xy_long(:,1),xy_long(:,2),'LineWidth',2,'Color','red');
-	J{i,7} = strrep(s(7:end-4),'_','/');
+        plot(xy_long(:,1),xy_long(:,2),'LineWidth',2,'Color','red');
+        J{i,7} = strrep(s(7:end-4),'_','/');
 	end
 end
 
