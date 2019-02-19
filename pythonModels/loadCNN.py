@@ -40,7 +40,6 @@ myFile.close()
 
 
 def LoadAndTest():
-    global model
     x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE)
 
     if K.image_data_format() == 'channels_first':
