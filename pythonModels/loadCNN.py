@@ -18,10 +18,12 @@ from preProcessing import preProcessing
 import numpy as np
 import datetime
 import csv
+import time
 
 CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
 fileName = "SoakTestResults.csv"
+PICKLE_PATH = "./dataset.pkl"
 
 batch_size = 128
 num_classes = 10
@@ -32,15 +34,8 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
-sched = BlockingScheduler()
-
-## reset file
-myFile = open(fileName, 'w')
-myFile.close()
-
-
 def LoadAndTest():
-    x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE)
+    x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE,PICKLE_PATH)
 
     if K.image_data_format() == 'channels_first':
         x_data = x_data.reshape(x_data.shape[0], 3, img_rows, img_cols)
@@ -95,10 +90,7 @@ def getRecordedList2D():
 
     return tempList
 
-@sched.scheduled_job('interval', minutes=10)
-def timed_job():
-    LoadAndTest()
-    print("results recorded")
+LoadAndTest()
+print("results recorded")
+time.sleep(5)
 
-
-sched.start()
