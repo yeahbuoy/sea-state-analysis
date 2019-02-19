@@ -17,6 +17,8 @@ import numpy as np
 
 CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
+PICKLE_PATH = "./dataset.pkl"
+
 
 batch_size = 128
 num_classes = 10
@@ -27,7 +29,9 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
-x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE)
+print("Beginning data load...")
+x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH)
+print("Data load complete...")
 
 if K.image_data_format() == 'channels_first':
     x_data = x_data.reshape(x_data.shape[0], 3, img_rows, img_cols)
@@ -44,11 +48,11 @@ x_data /= np.std(x_data)
 X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1)
 
 model = Sequential()
-model.add(Conv2D(16, kernel_size=(3,3), activation='relu', input_shape=input_shape))
+model.add(Conv2D(4, kernel_size=(16,16), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(32, kernel_size=(3,3), activation='relu', input_shape=input_shape))
+model.add(Conv2D(8, kernel_size=(8,8), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=input_shape))
+model.add(Conv2D(16, kernel_size=(4,4), activation='relu', input_shape=input_shape))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(16, activation='relu'))

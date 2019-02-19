@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import os
 import unittest
+import pickle
 
 def crop_and_split(im):
     im = im.copy()
@@ -35,7 +36,22 @@ def visible(im):
         return False
 
 
-def load_dataset(path, dataPath):
+def load_dataset(path, dataPath, picklePath, forceNewData = False):
+    if os.path.isfile(picklePath) and not forceNewData:
+        print("Loading cached dataset...")
+        with open(picklePath, "rb") as pickleFile:
+            dataset = pickle.load(pickleFile)
+
+    else:
+        print("Generating new dataset...")
+        dataset = generate_dataset(path, dataPath)
+        with open(picklePath, "wb") as pickleFile:
+            pickle.dump(dataset, pickleFile)
+
+    return dataset
+
+
+def generate_dataset(path, dataPath):
     beaufortData = pd.read_csv(dataPath)
     subimages = []
     output = []
@@ -48,14 +64,13 @@ def load_dataset(path, dataPath):
         if not visible(im):
             continue
         subimages.append(crop_and_split(im))
-        #beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['BeaufortForce']
+        # beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['BeaufortForce']
         beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['WindSpeed(m/s)']
         for i in range(6):
             output.append(beaufortNumber)
     xdata = np.concatenate(subimages, axis=0)
     ydata = np.asarray(output)
     return xdata, ydata
-
 
 
 class TestPreProcessingMethods(unittest.TestCase):
