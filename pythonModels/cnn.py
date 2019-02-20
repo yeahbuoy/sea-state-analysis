@@ -13,12 +13,15 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
 from sklearn.model_selection import train_test_split
 from preProcessing import preProcessing
+from keras_preprocessing.image import ImageDataGenerator
+from models import OurModels
 import numpy as np
+import pandas as pd
 
 CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
-PICKLE_PATH = "./dataset.pkl"
-
+PICKLE_PATH = "./dataframe.pkl"
+SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 batch_size = 128
 num_classes = 10
@@ -29,10 +32,12 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
+'''
 print("Beginning data load...")
 x_data, y_data = preProcessing.load_dataset(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH)
 print("Data load complete...")
 
+print("Adjusting to image format...")
 if K.image_data_format() == 'channels_first':
     x_data = x_data.reshape(x_data.shape[0], 3, img_rows, img_cols)
     input_shape = (3, img_rows, img_cols)
@@ -41,35 +46,46 @@ else:
     x_data = x_data.reshape(x_data.shape[0], img_rows, img_cols, 3)
     input_shape = (img_rows, img_cols, 3)
 
+print("A little bit of normalization...")
+#x_data = x_data.astype('float32')
 
-x_data = x_data.astype('float32')
-x_data -= np.mean(x_data)
-x_data /= np.std(x_data)
+y_data /= max(y_data)
+print("Train Test Split")
 X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.1)
+'''
 
-model = Sequential()
-model.add(Conv2D(4, kernel_size=(16,16), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(8, kernel_size=(8,8), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Conv2D(16, kernel_size=(4,4), activation='relu', input_shape=input_shape))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(16, activation='relu'))
-model.add(Dropout(0.5))
-model.add(Dense(4, activation='relu'))
-model.add(Dense(1, activation='linear'))
 
-model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
+traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
+datagen=ImageDataGenerator(rescale=1./255.,validation_split=0.25)
+train_generator=datagen.flow_from_dataframe(
+    dataframe=traindf,
+    directory=SPLIT_IMAGE_OUT_PATH,
+    x_col="PictureName",
+    y_col="WaveHeight",
+    #subset="training",
+    batch_size=13,
+    shuffle=True,
+    class_mode="other",
+    target_size=(270,480))
 
-predict = model.predict(X_test)
-for pred, y in zip(predict, y_test):
-    print("Predict: {}\t Actual: {}".format(pred, y))
+print("Building Model...")
+model = OurModels.george_1((img_rows, img_cols, 3))
+
+print("Fitting Model...")
+#model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
+
+STEP_SIZE_TRAIN=train_generator.n//train_generator.batch_size
+model.fit_generator(generator=train_generator,
+                    steps_per_epoch=STEP_SIZE_TRAIN,
+                    epochs=20,
+                    verbose=1)
+#predict = model.predict(X_test)
+#for pred, y in zip(predict, y_test):
+#    print("Predict: {}\t Actual: {}".format(pred, y))
 
 model.save('savedModel.h5')
-score = model.evaluate(X_test, y_test)
-print(score)
+#score = model.evaluate(X_test, y_test)
+#print(score)
 '''
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
