@@ -131,7 +131,7 @@ class TestPreProcessingMethods(unittest.TestCase):
 
         im = io.imread("../../data/pictures/41001_2016_03_18_1110.jpg")
         subimages = crop_and_split(im)
-        self.assertFalse(any([is_saturated(si) for si in subimages]), "Non-Saturated Image marked Saturated")
+        self.assertFalse(any([is_saturated(si) for si in subimages]), "NonSaturated Image marked Saturated")
 
 
     def test_is_visible(self):
