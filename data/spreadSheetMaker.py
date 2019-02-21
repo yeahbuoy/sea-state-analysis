@@ -6,8 +6,8 @@ import csv
 # also assumes that all the data is using the same naming schemes (such as all photos are labeled with
 
 PicturesDirs = ["Pictures"]
-WindFiles = ["41001_201812061335-WIND.csv","41048_201902061931 -WIND.csv"]
-WaveFiles = ["41001_201812061340-WAVE.csv","41048_201902061917 -WAVE.csv"]
+WindFiles = ["41001_201812061335-WIND.csv","41048_201902061931 -WIND.csv","41048_201902191939 - WIND.csv"]
+WaveFiles = ["41001_201812061340-WAVE.csv","41048_201902061917 -WAVE.csv","41048_201902191945 - WAVE.csv"]
 NewFileName = "CoolSpreadSheet.csv"
 
 def getListofPics():
@@ -174,6 +174,8 @@ def convertToKnots(WindMS):
 
 
 newList = []
+countList = [0,0,0,0,0,0,0,0,0,0,0,0,0]
+total = 0
 windList = getWindList2D()
 waveList = getWaveList2D()
 firstRow = ["PictureName", "WindSpeed(m/s)", "WaveHeight(m)", "BeaufortForce"]
@@ -204,8 +206,27 @@ for picture in listOfPics:
 
     if(hadWind):
         ## get BeafortForce from wind
-        tempRow.append(getBeaufortForceFromWind(tempRow[1]))
+        BNumber = getBeaufortForceFromWind(tempRow[1])
+        tempRow.append(BNumber)
         newList.append(tempRow)
+        countList[BNumber] += 1
+
+    total += 1
+
+print("Beaufort Force 1: " + str(countList[0]))
+print("Beaufort Force 2: " + str(countList[1]))
+print("Beaufort Force 3: " + str(countList[2]))
+print("Beaufort Force 4: " + str(countList[3]))
+print("Beaufort Force 5: " + str(countList[4]))
+print("Beaufort Force 6: " + str(countList[5]))
+print("Beaufort Force 7: " + str(countList[6]))
+print("Beaufort Force 8: " + str(countList[7]))
+print("Beaufort Force 9: " + str(countList[8]))
+print("Beaufort Force 10: " + str(countList[9]))
+print("Beaufort Force 11: " + str(countList[10]))
+print("Beaufort Force 12: " + str(countList[11]))
+print("Beaufort Force 13: " + str(countList[12]))
+print("Total images:" + str(total))
 
 
 myFile = open(NewFileName, 'w')
