@@ -29,12 +29,25 @@ def split_im(im):
     return np.asarray(sub_images)
 
 
-def visible(im):
+def is_dark(im):
     if np.median(im) >= 50:
+        return False
+    else:
+        return True
+
+
+def is_saturated(im):
+    if np.all(np.percentile(im, 80, axis=(0, 1)) >= 252):
         return True
     else:
         return False
 
+
+def is_visible(im):
+    if (not is_saturated(im)) and (not is_dark(im)):
+        return True
+    else:
+        return False
 
 
 def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
@@ -52,21 +65,6 @@ def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
     return dataframe
 
 
-def load_dataset(path, dataPath, picklePath, forceNewData = False):
-    if os.path.isfile(picklePath) and not forceNewData:
-        print("Loading cached dataset...")
-        with open(picklePath, "rb") as pickleFile:
-            dataset = pickle.load(pickleFile)
-
-    else:
-        print("Generating new dataset...")
-        dataset = generate_dataset(path, dataPath)
-        with open(picklePath, "wb") as pickleFile:
-            pickle.dump(dataset, pickleFile)
-
-    return dataset
-
-
 def normalize(im):
     #im = im.copy().astype('float16')
     #mean = np.mean(im, axis=(0,1))
@@ -74,36 +72,6 @@ def normalize(im):
     #im -= mean
     #im /= std
     return im
-
-def generate_dataset(path, dataPath):
-    beaufortData = pd.read_csv(dataPath)
-    subimages = []
-    output = []
-    for imagename in os.listdir(path):
-        if imagename not in beaufortData['PictureName'].values:
-            print("Missing PictureData: {}".format(imagename))
-            continue
-        imagepath = os.path.join(path, imagename)
-        im = io.imread(imagepath)
-        if not visible(im):
-            continue
-        # beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['BeaufortForce']
-        beaufortNumber = beaufortData.loc[beaufortData['PictureName'] == imagename].iloc[0]['WaveHeight(m)']
-        if str(beaufortNumber) == 'nan' or (not (isinstance(beaufortNumber, float) or (isinstance(beaufortNumber, int)))):
-            continue
-
-        cropped_and_split = crop_and_split(im)
-        normalized = []
-        for i in range(len(cropped_and_split)):
-            normalized.append(normalize(cropped_and_split[i]))
-
-        subimages.append(normalized)
-        for i in range(6):
-            output.append(beaufortNumber)
-
-    xdata = np.concatenate(subimages, axis=0)
-    ydata = np.asarray(output)
-    return xdata, ydata
 
 
 def generate_dataframe(path, dataPath, outPath):
@@ -115,8 +83,6 @@ def generate_dataframe(path, dataPath, outPath):
             continue
         imagepath = os.path.join(path, imagename)
         im = io.imread(imagepath)
-        if not visible(im):
-            continue
         df_row = beaufortData.loc[imagename]
         beaufort_number = df_row["BeaufortForce"]
         wind_speed = df_row["WindSpeed(m/s)"]
@@ -133,6 +99,8 @@ def generate_dataframe(path, dataPath, outPath):
 
 
         for i in range(6):
+            if not is_visible(normalized[i]):
+                continue
             subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
             rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
             io.imsave(os.path.join(outPath, subImage_name), normalized[i], plugin="pil", quality=100)
@@ -148,12 +116,37 @@ def generate_dataframe(path, dataPath, outPath):
 
 class TestPreProcessingMethods(unittest.TestCase):
 
-    def test_visible(self):
+    def test_is_dark(self):
         im = io.imread("../../data/pictures/41001_2016_03_11_1210.jpg")
-        self.assertTrue(visible(im), "Visible Image marked Not Visible")
+        self.assertFalse(is_dark(im), "Visible Image marked Dark")
 
         im = io.imread("../../data/pictures/41001_2016_03_11_0010.jpg")
-        self.assertFalse(visible(im), "Dark Image marked Visible")
+        self.assertTrue(is_dark(im), "Dark Image marked Visible")
+
+
+    def test_is_saturated(self):
+        im = io.imread("../../data/pictures/41001_2016_03_11_2010.jpg")
+        subimages = crop_and_split(im)
+        self.assertTrue(any([is_saturated(si) for si in subimages]), "Saturated Image marked Not Saturated")
+
+        im = io.imread("../../data/pictures/41001_2016_03_18_1110.jpg")
+        subimages = crop_and_split(im)
+        self.assertFalse(any([is_saturated(si) for si in subimages]), "Non-Saturated Image marked Saturated")
+
+
+    def test_is_visible(self):
+        im = io.imread("../../data/pictures/41001_2016_03_18_1110.jpg")
+        subimages = crop_and_split(im)
+        self.assertTrue(all([is_visible(si) for si in subimages]), "Visible Image marked Not Visible")
+
+        im = io.imread("../../data/pictures/41001_2016_03_11_0010.jpg")
+        subimages = crop_and_split(im)
+        self.assertFalse(any([is_visible(si) for si in subimages]), "Dark Image marked Visible")
+
+        im = io.imread("../../data/pictures/41001_2016_03_13_1810.jpg")
+        subimages = crop_and_split(im)
+        self.assertFalse(is_visible(subimages[1]), "Saturated Image marked Visible")
+
 
     def test_split_im(self):
         im = io.imread("../../data/pictures/41001_2016_03_11_1210.jpg")
@@ -165,6 +158,7 @@ class TestPreProcessingMethods(unittest.TestCase):
 
         reformed = np.concatenate(subImages, axis=1)
         self.assertTrue(np.array_equal(im, reformed), "Images should be the same of ")
+
 
 
     def test_crop_im(self):
