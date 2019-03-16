@@ -160,13 +160,13 @@ class TestPreProcessingMethods(unittest.TestCase):
         self.assertTrue(np.array_equal(im, reformed), "Images should be the same of ")
 
 
-
     def test_crop_im(self):
         im = io.imread("../../data/pictures/41001_2016_03_11_1210.jpg")
         cropped = crop_im(im)
         self.assertEqual(cropped.shape, (270, im.shape[1], im.shape[2]), "Axis 0 should be of size 270")
         fakeCropped = im.copy()[0:270, :, :]
         self.assertTrue(np.array_equal(cropped, fakeCropped))
+
 
     def test_crop_and_split(self):
         from itertools import combinations
@@ -178,6 +178,7 @@ class TestPreProcessingMethods(unittest.TestCase):
 
         for a,b in combinations(result, 2):
             self.assertFalse(np.array_equal(a,b), "No two Sub Images should be the same.")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
