@@ -5,7 +5,7 @@
 % 'c' for crop
 % 'd' for debug
 % 'o' for otsu method
-mode = 'r';
+mode = 'o';
 
 if mode=='r'
     path = '../data/Pictures/*.jpg';
@@ -65,7 +65,7 @@ if mode=='c'
         name = pic.name;
         fname = strcat('Crops/',name)
         J = imread(name);
-        [height, width] = size(J);
+        [h, w] = size(J);
 
         % Find lines
         BW=otsu(fname);
