@@ -61,15 +61,31 @@ train_generator=datagen.flow_from_dataframe(
     dataframe=traindf,
     directory=SPLIT_IMAGE_OUT_PATH,
     x_col="PictureName",
-    y_col="WaveHeight",
-    #subset="training",
+    #y_col="WaveHeight",
+    y_col="BeaufortNumber",
+    subset="training",
     batch_size=13,
     shuffle=True,
-    class_mode="other",
+    #class_mode="other",
+    class_mode="categorical",
     target_size=(270,480))
 
+validation_generator=datagen.flow_from_dataframe(
+dataframe=traindf,
+    directory=SPLIT_IMAGE_OUT_PATH,
+    x_col="PictureName",
+    #y_col="WaveHeight",
+    y_col="BeaufortNumber",
+    subset="validation",
+    batch_size=13,
+    shuffle=True,
+    #class_mode="other",
+    class_mode="categorical",
+    target_size=(270,480)
+)
+
 print("Building Model...")
-model = OurModels.george_1((img_rows, img_cols, 3))
+model = OurModels.george_categorical((img_rows, img_cols, 3))
 
 print("Fitting Model...")
 #model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
@@ -78,7 +94,9 @@ STEP_SIZE_TRAIN=train_generator.n//train_generator.batch_size
 model.fit_generator(generator=train_generator,
                     steps_per_epoch=STEP_SIZE_TRAIN,
                     epochs=20,
-                    verbose=1)
+                    verbose=1,
+                    validation_data=validation_generator,
+                    validation_steps=1000)
 #predict = model.predict(X_test)
 #for pred, y in zip(predict, y_test):
 #    print("Predict: {}\t Actual: {}".format(pred, y))
