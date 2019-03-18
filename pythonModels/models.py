@@ -54,4 +54,38 @@ class OurModels:
 
     @staticmethod
     def alex_model():
-        pass
+        model = Sequential()
+        model.add(Conv2D(4, kernel_size=(16, 16), activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(8, kernel_size=(8, 8), activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(16, kernel_size=(4, 4), activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Flatten())
+        model.add(Dense(128, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(11, activation='softmax'))
+
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        return model
+
+    @staticmethod
+    def alex_model2():
+        model = Sequential()
+        model.add(Conv2D(4, kernel_size=(16, 16), activation='softmax', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(8, kernel_size=(8, 8), activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Conv2D(16, kernel_size=(4, 4), activation='relu', input_shape=input_shape))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Flatten())
+        model.add(Dense(128, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(11, activation='softmax'))
+
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        return model
