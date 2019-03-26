@@ -25,7 +25,7 @@ SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 batch_size = 128
 num_classes = 10
-epochs = 12
+epochs = 50
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -56,7 +56,7 @@ X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.
 
 
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
-datagen=ImageDataGenerator(rescale=1./255.,validation_split=0.25)
+datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25)
 train_generator=datagen.flow_from_dataframe(
     dataframe=traindf,
     directory=SPLIT_IMAGE_OUT_PATH,
@@ -71,7 +71,7 @@ train_generator=datagen.flow_from_dataframe(
     target_size=(270,480))
 
 validation_generator=datagen.flow_from_dataframe(
-dataframe=traindf,
+    dataframe=traindf,
     directory=SPLIT_IMAGE_OUT_PATH,
     x_col="PictureName",
     #y_col="WaveHeight",
@@ -91,12 +91,13 @@ print("Fitting Model...")
 #model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
 
 STEP_SIZE_TRAIN=train_generator.n//train_generator.batch_size
+STEP_SIZE_TEST=validation_generator.n//validation_generator.batch_size
 model.fit_generator(generator=train_generator,
                     steps_per_epoch=STEP_SIZE_TRAIN,
-                    epochs=20,
+                    epochs=epochs,
                     verbose=1,
                     validation_data=validation_generator,
-                    validation_steps=1000)
+                    validation_steps=STEP_SIZE_TEST)
 #predict = model.predict(X_test)
 #for pred, y in zip(predict, y_test):
 #    print("Predict: {}\t Actual: {}".format(pred, y))

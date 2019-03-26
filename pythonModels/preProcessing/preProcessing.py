@@ -66,11 +66,9 @@ def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
 
 
 def normalize(im):
-    #im = im.copy().astype('float16')
-    #mean = np.mean(im, axis=(0,1))
-    #std = np.std(im, axis=(0,1))
-    #im -= mean
-    #im /= std
+    im = np.array(im, dtype=np.float64)
+    im -= np.mean(im, keepdims=True)
+    im /= (np.std(im, keepdims=True) + 1e-6)
     return im
 
 
@@ -94,16 +92,17 @@ def generate_dataframe(path, dataPath, outPath):
         cropped_and_split = crop_and_split(im)
         normalized = []
 
+        '''
         for i in range(len(cropped_and_split)):
             normalized.append(normalize(cropped_and_split[i]))
-
+        '''
 
         for i in range(6):
-            if not is_visible(normalized[i]):
+            if not is_visible(cropped_and_split[i]):
                 continue
             subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
             rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-            io.imsave(os.path.join(outPath, subImage_name), normalized[i], plugin="pil", quality=100)
+            io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
 
     df = pd.DataFrame.from_records(rows,
                                    columns=["PictureName", "BeaufortNumber", "WindSpeed", "WaveHeight"],
