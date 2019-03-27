@@ -49,6 +49,8 @@ invert_map = dict([[v,k] for k,v in label_map.items()])
 
 #print(model.evaluate_generator(train_generator, steps=train_generator.n, verbose=1))
 
+looseScores = []
+tightScores = []
 for imageName, row in data.iterrows():
     beaufort_number = row["BeaufortForce"]
     imagePath = os.path.join("../data/pictures", imageName)
@@ -74,8 +76,29 @@ for imageName, row in data.iterrows():
     numPredictions = len(samples)
     if numPredictions > 0:
         medianPrediction = np.median(predictions)
-        print("Prediction: {}\tActual: {}\t Samples: {}".format(medianPrediction, beaufort_number, numPredictions))
+        if medianPrediction != int(medianPrediction):
+            meanPrediction = np.mean(predictions)
+            if meanPrediction > medianPrediction:
+                finalPrediction = int(medianPrediction + 1)
+            else:
+                finalPrediction = int(medianPrediction)
+        else:
+            finalPrediction = medianPrediction
+
+        if finalPrediction == beaufort_number:
+            tightScores.append(1)
+            looseScores.append(1)
+        else:
+            tightScores.append(0)
+            if abs(finalPrediction - beaufort_number) <= 1:
+                looseScores.append(1)
+            else:
+                looseScores.append(0)
+
+
+        #print("Prediction: {}\tActual: {}\t Samples: {}".format(medianPrediction, beaufort_number, numPredictions))
     else:
         pass
         #print("No sub-image was visible")
 
+print("Tight Accuracy: {}\nLoose Accuracy: {}".format(np.mean(tightScores), np.mean(looseScores)))

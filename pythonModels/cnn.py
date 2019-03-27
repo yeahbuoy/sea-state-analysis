@@ -56,6 +56,8 @@ X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.
 
 
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
+# shuffles the dataframe
+traindf = traindf.sample(frac=1)
 datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25)
 train_generator=datagen.flow_from_dataframe(
     dataframe=traindf,
