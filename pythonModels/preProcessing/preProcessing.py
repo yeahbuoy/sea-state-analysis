@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import unittest
 import pickle
+from skimage.color import rgb2gray
 
 def crop_and_split(im):
     im = im.copy()
@@ -100,9 +101,10 @@ def generate_dataframe(path, dataPath, outPath):
         for i in range(6):
             if not is_visible(cropped_and_split[i]):
                 continue
+            greyscale = rgb2gray(cropped_and_split[i])
             subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
             rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-            io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
+            io.imsave(os.path.join(outPath, subImage_name), greyscale, plugin="pil", quality=100)
 
     df = pd.DataFrame.from_records(rows,
                                    columns=["PictureName", "BeaufortNumber", "WindSpeed", "WaveHeight"],

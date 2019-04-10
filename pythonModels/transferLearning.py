@@ -4,7 +4,7 @@ import numpy as np
 import os
 import keras
 import matplotlib.pyplot as plt
-from keras.layers import Dense,GlobalAveragePooling2D
+from keras.layers import Dense,GlobalAveragePooling2D,Dropout
 from keras.applications import MobileNet
 from keras.preprocessing import image
 from keras.models import Sequential
@@ -12,8 +12,10 @@ from keras.applications.mobilenet import preprocess_input
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model
 from keras import metrics
+from keras import regularizers
 from preProcessing import preProcessing
 from keras.optimizers import Adam
+from keras.utils import plot_model
 
 CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
@@ -36,11 +38,19 @@ base_model=MobileNet(weights='imagenet',include_top=False) #imports the mobilene
 
 x=base_model.output
 x=GlobalAveragePooling2D()(x)
-x=Dense(1024,activation='relu')(x) #we add dense layers so that the model can learn more complex functions and classify for better results.
-x=Dense(1024,activation='relu')(x) #dense layer 2
-x=Dense(512,activation='relu')(x) #dense layer 3
+x=Dense(1024,activation='relu',kernel_regularizer=regularizers.l2(0.01),
+                bias_regularizer=regularizers.l2(0.01))(x) #we add dense layers so that the model can learn more complex functions and classify for better results.
+x=Dropout(0.5)(x)
+x=Dense(1024,activation='relu',kernel_regularizer=regularizers.l2(0.01),
+                bias_regularizer=regularizers.l2(0.01))(x) #dense layer 2
+x=Dropout(0.5)(x)
+x=Dense(512,activation='relu',kernel_regularizer=regularizers.l2(0.01),
+                bias_regularizer=regularizers.l2(0.01))(x) #dense layer 3
+x=Dropout(0.5)(x)
 preds=Dense(11,activation='softmax')(x) #final layer with softmax activation
 model=Model(inputs=base_model.input,outputs=preds)
+
+plot_model(model)
 
 ## simply for checking layers, comment out as needed
 # for i,layer in enumerate(model.layers):
@@ -82,7 +92,7 @@ for layer in model.layers[6:]:
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
 # shuffles the dataframe
 traindf = traindf.sample(frac=1)
-datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25)
+datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25, horizontal_flip=True)
 train_generator=datagen.flow_from_dataframe(
     dataframe=traindf,
     directory=SPLIT_IMAGE_OUT_PATH,
