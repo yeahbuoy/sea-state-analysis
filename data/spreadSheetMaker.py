@@ -1,5 +1,6 @@
 import os
 import csv
+import unittest
 
 
 # this script assumes that all the picture are already in a folder within the same directory as this script
@@ -56,6 +57,24 @@ def getWaveList2D():
                     tempRow.append(row[4])  # this will be the wind speed in m/s
                     tempList.append(tempRow)
                     line_count += 1
+
+    return tempList
+
+def checkSpreadSheet():
+
+    tempList = []
+    for fileName in WaveFiles:
+        with open(NewFileName) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                if(len(row) > 0):
+                    if line_count == 0:
+                        line_count += 1
+                    else:
+                        if(len(row) < 4):
+                            print(row[0])
+                        line_count += 1
 
     return tempList
 
@@ -121,7 +140,7 @@ def getBeaufortForceFromWind(windFloat):
         return 10
     elif (knots < 64):
         return 11
-    elif (knots >= 64):
+    else:
         return 12
 
 def getBeaufortForceFromWave(waveFloat):
@@ -169,9 +188,22 @@ def getBeaufortForceFromWave(waveFloat):
         return 12
 
 def convertToKnots(WindMS):
-    return (float(WindMS)*1.943844)
+    return (float(WindMS)*1.94384);
 
 
+class UnitTests(unittest.TestCase):
+
+    def test_knots_conversion(self):
+        self.assertAlmostEqual(convertToKnots(11), 21.3823, 2)
+
+    def test_beaufort_force_wind(self):
+        self.assertEqual(getBeaufortForceFromWind(4.2), 3)
+
+    def test_beaufort_force_wave(self):
+        self.assertEqual(getBeaufortForceFromWave(.8), 3)
+
+if __name__ == 'UnitTests':
+    unittest.main()
 
 newList = []
 countList = [0,0,0,0,0,0,0,0,0,0,0,0,0]
@@ -204,14 +236,17 @@ for picture in listOfPics:
                 tempRow.append("")
             break
 
+    ##if we get through the list and still no waves, append it as empty
+    if(not hadWave):
+        tempRow.append("")
+
     if(hadWind):
         ## get BeafortForce from wind
         BNumber = getBeaufortForceFromWind(tempRow[1])
         tempRow.append(BNumber)
         newList.append(tempRow)
         countList[BNumber] += 1
-
-    total += 1
+        total += 1
 
 print("Beaufort Force 1: " + str(countList[0]))
 print("Beaufort Force 2: " + str(countList[1]))
@@ -234,3 +269,6 @@ myFile = open(NewFileName, 'w')
 with myFile:
     writer = csv.writer(myFile)
     writer.writerows(newList)
+
+#checks to see if there are any empty slots, and prints out the image name if there was
+checkSpreadSheet()
