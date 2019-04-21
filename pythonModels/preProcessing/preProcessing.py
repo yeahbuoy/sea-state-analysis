@@ -37,10 +37,11 @@ def is_dark(im):
 
 
 def is_saturated(im):
-    if np.all(np.percentile(im, 80, axis=(0, 1)) >= 252):
-        return True
-    else:
-        return False
+    # if np.all(np.percentile(im, 80, axis=(0, 1)) >= 252):  ###############REMOVED BRIGHTNESS FILTER
+    #     return True
+    # else:
+    #     return False
+    return False
 
 
 def is_visible(im):
@@ -48,6 +49,14 @@ def is_visible(im):
         return True
     else:
         return False
+
+############################################################################# added this method to check for corruption
+def is_corrupted(imagePath):
+    try:
+        img = io.imread(imagePath)
+    except:
+        return True
+    return False
 
 
 def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
@@ -80,29 +89,35 @@ def generate_dataframe(path, dataPath, outPath):
             print("Missing PictureData: {}".format(imagename))
             continue
         imagepath = os.path.join(path, imagename)
-        im = io.imread(imagepath)
-        df_row = beaufortData.loc[imagename]
-        beaufort_number = df_row["BeaufortForce"]
-        wind_speed = df_row["WindSpeed(m/s)"]
-        wave_height = df_row["WaveHeight(m)"]
+        if(not is_corrupted(imagepath)):           ############################## this is where I check for corruption
+            im = io.imread(imagepath)
+            df_row = beaufortData.loc[imagename]
+            beaufort_number = df_row["BeaufortForce"]
+            wind_speed = df_row["WindSpeed(m/s)"]
+            #wave_height = df_row["WaveHeight(m)"] ############################### WaveHeight was erroring so just made it one always
+            wave_height = 1
 
-        if str(wind_speed) == "nan" or str(wind_speed) == "nan":
-            continue
-
-        cropped_and_split = crop_and_split(im)
-        normalized = []
-
-        '''
-        for i in range(len(cropped_and_split)):
-            normalized.append(normalize(cropped_and_split[i]))
-        '''
-
-        for i in range(6):
-            if not is_visible(cropped_and_split[i]):
+            if str(wind_speed) == "nan" or str(wind_speed) == "nan":
                 continue
-            subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
-            rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-            io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
+
+            cropped_and_split = crop_and_split(im)
+            normalized = []
+
+            '''
+            for i in range(len(cropped_and_split)):
+                normalized.append(normalize(cropped_and_split[i]))
+            '''
+
+            for i in range(6):
+                if not is_visible(cropped_and_split[i]):
+                    continue
+                subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
+                rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
+                io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
+
+
+        else:                                           ############################### here's the catch
+            print("error opening image: "+ imagepath)
 
     df = pd.DataFrame.from_records(rows,
                                    columns=["PictureName", "BeaufortNumber", "WindSpeed", "WaveHeight"],
