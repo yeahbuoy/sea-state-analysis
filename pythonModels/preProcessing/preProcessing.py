@@ -83,6 +83,7 @@ def normalize(im):
 
 
 def generate_dataframe(path, dataPath, outPath):
+    print("Generating DataFrame from {}".format(dataPath))
     rows = []
     beaufortData = pd.read_csv(dataPath, index_col="PictureName", error_bad_lines=False)
     numImages = len(os.listdir(path))
@@ -94,36 +95,37 @@ def generate_dataframe(path, dataPath, outPath):
             print("Missing PictureData: {}".format(imagename))
             continue
         imagepath = os.path.join(path, imagename)
-        if(not is_corrupted(imagepath)):           ############################## this is where I check for corruption
-            im = io.imread(imagepath)
-            df_row = beaufortData.loc[imagename]
-            beaufort_number = df_row["BeaufortForce"]
-            wind_speed = df_row["WindSpeed(m/s)"]
-            #wave_height = df_row["WaveHeight(m)"] ############################### WaveHeight was erroring so just made it one always
-            wave_height = 1
+        #if(not is_corrupted(imagepath)):           ############################## this is where I check for corruption
+        im = io.imread(imagepath)
+        df_row = beaufortData.loc[imagename]
+        beaufort_number = df_row["BeaufortForce"]
+        wind_speed = df_row["WindSpeed(m/s)"]
+        #wave_height = df_row["WaveHeight(m)"] ############################### WaveHeight was erroring so just made it one always
+        wave_height = 1
 
-            if str(wind_speed) == "nan" or str(wind_speed) == "nan":
+        if str(wind_speed) == "nan" or str(wind_speed) == "nan":
+            continue
+
+        cropped_and_split = crop_and_split(im)
+        normalized = []
+
+        '''
+        for i in range(len(cropped_and_split)):
+            normalized.append(normalize(cropped_and_split[i]))
+        '''
+
+        for i in range(6):
+            if not is_visible(cropped_and_split[i]):
                 continue
+            greyScale = rgb2gray(cropped_and_split[i])
+            subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
+            rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
+            io.imsave(os.path.join(outPath, subImage_name), greyScale, plugin="pil", quality=100)
 
-            cropped_and_split = crop_and_split(im)
-            normalized = []
-
-            '''
-            for i in range(len(cropped_and_split)):
-                normalized.append(normalize(cropped_and_split[i]))
-            '''
-
-            for i in range(6):
-                if not is_visible(cropped_and_split[i]):
-                    continue
-                greyScale = rgb2gray(cropped_and_split[i])
-                subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
-                rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-                io.imsave(os.path.join(outPath, subImage_name), greyScale, plugin="pil", quality=100)
-
-
+        '''
         else:                                           ############################### here's the catch
             print("error opening image: "+ imagepath)
+        '''
 
     df = pd.DataFrame.from_records(rows,
                                    columns=["PictureName", "BeaufortNumber", "WindSpeed", "WaveHeight"],

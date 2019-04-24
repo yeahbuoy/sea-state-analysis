@@ -20,7 +20,7 @@ import pandas as pd
 from keras.utils import plot_model
 
 
-CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
+CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
 PICKLE_PATH = "./dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
