@@ -1,5 +1,6 @@
 from PIL import Image
 from skimage import io
+from skimage.color import rgb2gray
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -83,7 +84,7 @@ def normalize(im):
 
 def generate_dataframe(path, dataPath, outPath):
     rows = []
-    beaufortData = pd.read_csv(dataPath, index_col="PictureName")
+    beaufortData = pd.read_csv(dataPath, index_col="PictureName", error_bad_lines=False)
     for imagename in os.listdir(path):
         if imagename not in beaufortData.index:
             print("Missing PictureData: {}".format(imagename))
@@ -111,9 +112,10 @@ def generate_dataframe(path, dataPath, outPath):
             for i in range(6):
                 if not is_visible(cropped_and_split[i]):
                     continue
+                greyScale = rgb2gray(cropped_and_split[i])
                 subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
                 rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-                io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
+                io.imsave(os.path.join(outPath, subImage_name), greyScale, plugin="pil", quality=100)
 
 
         else:                                           ############################### here's the catch
