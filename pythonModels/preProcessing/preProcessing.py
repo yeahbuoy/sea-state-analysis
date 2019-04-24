@@ -85,7 +85,11 @@ def normalize(im):
 def generate_dataframe(path, dataPath, outPath):
     rows = []
     beaufortData = pd.read_csv(dataPath, index_col="PictureName", error_bad_lines=False)
+    numImages = len(os.listdir(path))
+    imageCount = 1
     for imagename in os.listdir(path):
+        print("Image {}/{}".format(imageCount, numImages))
+        imageCount += 1
         if imagename not in beaufortData.index:
             print("Missing PictureData: {}".format(imagename))
             continue
