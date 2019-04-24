@@ -26,7 +26,6 @@ PICKLE_PATH = "./dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 batch_size = 128
-num_classes = 10
 epochs = 50
 
 # input image dimensions
@@ -58,6 +57,7 @@ X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.
 
 
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
+numClasses = traindf["BeaufortNumber"].nunique()
 # shuffles the dataframe
 traindf = traindf.sample(frac=1)
 datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25, horizontal_flip=True)
@@ -89,7 +89,7 @@ validation_generator=datagen.flow_from_dataframe(
 )
 
 print("Building Model...")
-model = OurModels.transfer_learning((img_rows, img_cols))
+model = OurModels.transfer_learning((img_rows, img_cols), numClasses)
 
 plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 

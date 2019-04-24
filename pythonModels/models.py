@@ -34,7 +34,7 @@ class OurModels:
 
 
     @staticmethod
-    def george_categorical(input_shape):
+    def george_categorical(input_shape, numClasses):
         model = Sequential()
         model.add(Conv2D(4, kernel_size=(9, 9), activation='relu', input_shape=input_shape))
         model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -48,7 +48,7 @@ class OurModels:
         model.add(Dense(128, activation='relu'))
         model.add(Dropout(0.5))
         model.add(Dense(64, activation='relu'))
-        model.add(Dense(11, activation='softmax'))
+        model.add(Dense(numClasses, activation='softmax'))
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=[metrics.categorical_accuracy])
 
@@ -56,7 +56,7 @@ class OurModels:
 
 
     @staticmethod
-    def transfer_learning(input_shape):
+    def transfer_learning(input_shape, numClasses):
         base_model = MobileNet(weights='imagenet',
                                include_top=False)  # imports the mobilenet model and discards the last 1000 neuron layer.
         # base_model2 = Sequential()
@@ -73,7 +73,7 @@ class OurModels:
         x = Dense(512, activation='relu', kernel_regularizer=regularizers.l2(0.01),
                   bias_regularizer=regularizers.l2(0.01))(x)  # dense layer 3
         x = Dropout(0.5)(x)
-        preds = Dense(11, activation='softmax')(x)  # final layer with softmax activation
+        preds = Dense(numClasses, activation='softmax')(x)  # final layer with softmax activation
         model = Model(inputs=base_model.input, outputs=preds)
 
         for layer in model.layers:
