@@ -8,10 +8,9 @@ import os
 import unittest
 import pickle
 
-
 corruptedFilePath = "./corrupted"
 
-############################################################################# added this method to check for corruption
+# added this method to check for corruption
 def is_corrupted(imagePath):
     try:
         img = io.imread(imagePath)
@@ -19,7 +18,7 @@ def is_corrupted(imagePath):
         return True
     return False
 
-def make_CorruptedDirectory():
+def makeCorruptedDirectory():
     if not os.path.exists(corruptedFilePath):
         os.makedirs(corruptedFilePath)
 
@@ -28,24 +27,23 @@ def moveBadFile(sourceDir, destDir, image):
     newImage = os.path.join(destDir, image)
     os.rename(ogImage,newImage)
 
-
 def generate_dataframe(path):
-    make_CorruptedDirectory()
+    makeCorruptedDirectory()
     goodImages = 0
     badImages = 0
     for imagename in os.listdir(path):
         imagepath = os.path.join(path, imagename)
-        if(not is_corrupted(imagepath)):           ############################## this is where I check for corruption
+        # this is where I check for corruption
+        if(not is_corrupted(imagepath)):
             goodImages += 1
-        else:                                           ############################### here's the catch
-            print("error opening image: "+ imagepath)
+        # here's the catch
+        else: 
+            print("Corrupted image detected: "+ imagepath)
             badImages += 1
             moveBadFile(path,corruptedFilePath,imagename)
-
 
     print("badImages: " + str(badImages))
     print("goodImages: " + str(goodImages))
 
-
-
-generate_dataframe("./scraped")
+if __name__ == "__main__":
+    generate_dataframe("./scraped")
