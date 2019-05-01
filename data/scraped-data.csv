@@ -1,4 +1,4 @@
-PictureName,WindSpeed(m/s),WaveHeight(m/s),BeaufortForce
+PictureName,WindSpeed(m/s),WaveHeight(m),BeaufortForce
 Z63A_2019_04_10_0410.jpg,10.0,MM,5
 Z09A_2019_04_10_0410.jpg,5.0,MM,3
 Z80A_2019_04_10_0410.jpg,6.0,MM,4
