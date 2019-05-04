@@ -8,7 +8,7 @@ fileName = "CombinedSpreadSheet.csv"
 def getCurrList():
 
     tempList = []
-    firstRow = ["PictureName", "WindSpeed(m/s)", "WaveHeight(m)", "BeaufortForce", "BucketForce"]
+    firstRow = ["PictureName", "WindSpeed(m/s)", "WaveHeight(m)", "BeaufortForce"]
     tempList.append(firstRow)
     with open(fileName) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -47,11 +47,11 @@ for currRow in currList:
         wind = currRow[1]
         if(wind != "MM"):
             BNumber = getBeaufortForceFromWind(wind)
-            currRow.append(BNumber)
+            currRow[3] = BNumber
             countList[BNumber] += 1
             total += 1
         else:
-            currRow.append(4)
+            currRow[3] = 4
 
     index += 1
 

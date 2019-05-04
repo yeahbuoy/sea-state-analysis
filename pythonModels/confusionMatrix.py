@@ -11,6 +11,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from keras.models import load_model
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mlib
 from sklearn import svm, datasets
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
@@ -22,7 +23,7 @@ from keras.utils import plot_model
 
 CSV_DATA_FILE = "../data/SuperCoolSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
-PICKLE_PATH = "./dataframe.pkl"
+PICKLE_PATH = "./savedModels/FinalGreyBin/dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 batch_size = 128
@@ -32,7 +33,7 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
-def plot_confusion_matrix(classes,
+def plot_confusion_matrix(y_true,y_pred,classes,
                           normalize=False,
                           title=None,
                           cmap=plt.cm.Blues):
@@ -40,6 +41,7 @@ def plot_confusion_matrix(classes,
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
+    mlib.rcParams.update({'font.size': 22})
     if not title:
         if normalize:
             title = 'Normalized confusion matrix'
@@ -47,8 +49,7 @@ def plot_confusion_matrix(classes,
             title = 'Confusion matrix, without normalization'
 
     # Compute confusion matrix
-    arr = [[19039, 102, 341], [687, 2995, 11], [262, 0, 1559]]
-    cm = np.array(arr)
+    cm = confusion_matrix(y_true, y_pred)
     # Only use the labels that appear in the data
     #classes = classes[unique_labels(y_true, y_pred)]
     if normalize:
@@ -114,13 +115,13 @@ test_generator = datagen.flow_from_dataframe(
 )
 
 print("Building Model...")
-model = load_model('GreyBucket3.h5')
+model = load_model('./savedModels/FinalGreyBin/FinalGreyBucket3.h5')
 
 
 STEP_SIZE_TEST=test_generator.n//test_generator.batch_size
 
-# Y_pred = model.predict_generator(test_generator, steps=STEP_SIZE_TEST, verbose=1)
-# y_pred = np.argmax(Y_pred, axis=1)
+Y_pred = model.predict_generator(test_generator, steps=STEP_SIZE_TEST, verbose=1)
+y_pred = np.argmax(Y_pred, axis=1)
 # print('Confusion Matrix')
 # print(confusion_matrix(test_generator.classes, y_pred))
 # print('Classification Report')
@@ -130,7 +131,10 @@ STEP_SIZE_TEST=test_generator.n//test_generator.batch_size
 np.set_printoptions(precision=2)
 
 # Plot non-normalized confusion matrix
-plot_confusion_matrix(classes=["4","1","7"], normalize=True,
+plot_confusion_matrix(test_generator.classes,y_pred, classes=classies2, normalize=True,
+                      title='Confusion matrix, with normalization')
+
+plot_confusion_matrix(test_generator.classes,y_pred, classes=classies2, normalize=False,
                       title='Confusion matrix, without normalization')
 
 plt.show()

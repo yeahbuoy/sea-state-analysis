@@ -69,6 +69,7 @@ def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
     else:
         print("Generating new dataframe...")
         dataframe = generate_dataframe(path, dataPath, outPath)
+        dataframe = dataframe.sample(frac=1)
         with open(picklePath, "wb") as pickleFile:
             pickle.dump(dataframe, pickleFile)
 

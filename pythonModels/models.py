@@ -80,7 +80,7 @@ class OurModels:
             layer.trainable = False
         # for layer in model.layers[:68]:
         #     base_model2.add(layer)
-        for layer in model.layers[6:]:
+        for layer in model.layers[9:]:
             layer.trainable = True
 
         model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=[metrics.categorical_accuracy])
