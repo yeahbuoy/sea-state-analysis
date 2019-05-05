@@ -33,6 +33,21 @@ img_rows, img_cols = 28, 28
 
 img_rows, img_cols = 270, 480
 
+def fixOrder(cm):
+    nrows, ncols = cm.shape
+
+    rows = np.vsplit(cm, nrows)
+    s = sorted(zip(classes2, rows))
+    _, rows = map(list, zip(*s))
+    cm = np.vstack(rows)
+
+    cols = np.hsplit(cm, ncols)
+    s = sorted(zip(classes2, cols))
+    _, cols = map(list, zip(*s))
+    cm = np.hstack(cols)
+
+    return cm
+
 def plot_confusion_matrix(y_true,y_pred,classes,
                           normalize=False,
                           title=None,
@@ -50,6 +65,7 @@ def plot_confusion_matrix(y_true,y_pred,classes,
 
     # Compute confusion matrix
     cm = confusion_matrix(y_true, y_pred)
+    cm = fixOrder(cm)
     # Only use the labels that appear in the data
     #classes = classes[unique_labels(y_true, y_pred)]
     if normalize:
@@ -90,12 +106,12 @@ def plot_confusion_matrix(y_true,y_pred,classes,
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
 numClasses = traindf["BeaufortNumber"].nunique()
 
-classies = traindf["BeaufortNumber"].unique()
-print(classies)
-classies2 = []
+classes = traindf["BeaufortNumber"].unique()
+print(classes)
+classes2 = []
 
-for x in classies:
-    classies2.append(str(x))
+for x in classes:
+    classes2.append(str(x))
 
 datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25)
 
@@ -107,7 +123,7 @@ test_generator = datagen.flow_from_dataframe(
     # y_col="WaveHeight",
     y_col="BeaufortNumber",
     # subset="validation",
-    batch_size=1,
+    batch_size=13,
     shuffle=False,
     # class_mode="other",
     class_mode="categorical",
@@ -120,8 +136,11 @@ model = load_model('./savedModels/FinalGreyBin/FinalGreyBucket3.h5')
 
 STEP_SIZE_TEST=test_generator.n//test_generator.batch_size
 
+y_pred = None
+
 Y_pred = model.predict_generator(test_generator, steps=STEP_SIZE_TEST, verbose=1)
 y_pred = np.argmax(Y_pred, axis=1)
+
 # print('Confusion Matrix')
 # print(confusion_matrix(test_generator.classes, y_pred))
 # print('Classification Report')
@@ -131,10 +150,10 @@ y_pred = np.argmax(Y_pred, axis=1)
 np.set_printoptions(precision=2)
 
 # Plot non-normalized confusion matrix
-plot_confusion_matrix(test_generator.classes,y_pred, classes=classies2, normalize=True,
+plot_confusion_matrix(test_generator.classes, y_pred, classes=sorted(classes2), normalize=True,
                       title='Confusion matrix, with normalization')
 
-plot_confusion_matrix(test_generator.classes,y_pred, classes=classies2, normalize=False,
+plot_confusion_matrix(test_generator.classes, y_pred, classes=sorted(classes2), normalize=False,
                       title='Confusion matrix, without normalization')
 
 plt.show()
