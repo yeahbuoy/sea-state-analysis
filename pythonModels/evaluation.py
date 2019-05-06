@@ -5,100 +5,92 @@ import numpy as np
 from skimage import io
 from preProcessing import preProcessing
 import os
+import pickle
 from keras_preprocessing.image import ImageDataGenerator
+from skimage.color import rgb2gray
 
 
-CSV_PATH = "../data/CoolSpreadSheet.csv"
+CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
-CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
+CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
-PICKLE_PATH = "./dataframe.pkl"
+PICKLE_PATH = "./savedModels/FinalGreyBin/dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
-model = load_model("savedModel.h5")
-data = pd.read_csv(CSV_PATH, index_col="PictureName")
+MODEL_PATH = "./savedModels/FinalGreyBin/FinalGreyBucket3.h5"
+
+model = load_model(MODEL_PATH)
+data = pd.read_csv(CSV_PATH)
+
+with open(PICKLE_PATH, "rb") as pickleFile:
+    training_df = pickle.load(pickleFile)
+
+classes = training_df["BeaufortNumber"].unique()
 
 
-
-traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
-datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize)
-
-train_generator=datagen.flow_from_dataframe(
-    dataframe=traindf,
-    directory=SPLIT_IMAGE_OUT_PATH,
-    x_col="PictureName",
-    #y_col="WaveHeight",
-    y_col="BeaufortNumber",
-    batch_size=1,
-    shuffle=False,
-    #class_mode="other",
-    class_mode="categorical",
-    target_size=(270,480))
-
-# Keras mislabels the classes!!
-label_map = train_generator.class_indices
-invert_map = dict([[v,k] for k,v in label_map.items()])
-
-#predictions = model.predict_generator(train_generator, train_generator.n)
-#predictions = predictions.argmax(axis=-1)
-
-#print(predictions)
-#print(traindf["BeaufortNumber"])
-
-#print("done")
-
-#print(model.evaluate_generator(train_generator, steps=train_generator.n, verbose=1))
-
-looseScores = []
-tightScores = []
-for imageName, row in data.iterrows():
-    beaufort_number = row["BeaufortForce"]
-    imagePath = os.path.join("../data/pictures", imageName)
-    im = io.imread(imagePath)
-    splitImages = preProcessing.crop_and_split(im)
-
-    predictions = []
-    samples = []
-    for subImage in splitImages:
-        if preProcessing.is_visible(subImage):
-            subImageNorm = preProcessing.normalize(subImage)
-            samples.append(subImageNorm)
-
-    if len(samples) > 0:
-        X = np.array(samples)
-        predictions = model.predict(X)
-        predictions = predictions.argmax(axis=-1)
-        a=1
-
-    # This is very important!!!
-    predictions = [invert_map[p] for p in predictions]
-
-    numPredictions = len(samples)
-    if numPredictions > 0:
-        medianPrediction = np.median(predictions)
-        if medianPrediction != int(medianPrediction):
-            meanPrediction = np.mean(predictions)
-            if meanPrediction > medianPrediction:
-                finalPrediction = int(medianPrediction + 1)
-            else:
-                finalPrediction = int(medianPrediction)
-        else:
-            finalPrediction = medianPrediction
-
-        if finalPrediction == beaufort_number:
-            tightScores.append(1)
-            looseScores.append(1)
-        else:
-            tightScores.append(0)
-            if abs(finalPrediction - beaufort_number) <= 1:
-                looseScores.append(1)
-            else:
-                looseScores.append(0)
+def norm(imgs):
+    newImgs = []
+    for img in imgs:
+        if preProcessing.is_visible(img):
+            normImg = rgb2gray(img)
+            normImg = np.dstack((normImg, normImg, normImg))
+            normImg = preProcessing.normalize(normImg)
+            newImgs.append(normImg)
+        # else:
+        #     newImgs.append(None)
+    return newImgs
 
 
-        #print("Prediction: {}\tActual: {}\t Samples: {}".format(medianPrediction, beaufort_number, numPredictions))
+meanScores = []
+medianScores = []
+
+numImages = len(data)
+
+data = data.sample(frac=1)
+i = 0
+for _, row in data.iterrows():
+    i += 1
+    if i % 10 == 0:
+        print("{} / {}".format(i, numImages))
+
+
+    pictureName = row["PictureName"]
+    bf = int(row["BeaufortForce"])
+
+    imagePath = os.path.join(IMAGE_DIRECTORY, pictureName)
+
+    if os.path.isfile(imagePath):
+        compositeImage = io.imread(imagePath)
     else:
-        pass
-        #print("No sub-image was visible")
+        continue
 
-print("Tight Accuracy: {}\nLoose Accuracy: {}".format(np.mean(tightScores), np.mean(looseScores)))
+    subImages = preProcessing.crop_and_split(compositeImage)
+
+    normSubImages = norm(subImages)
+
+    if len(normSubImages):
+        X = np.array(normSubImages)
+        predictions = model.predict(X).argmax(axis=-1)
+        predictions = [classes[x] for x in predictions]
+
+    else:
+        continue
+
+    meanScore = np.round(np.mean(predictions))
+    medianScore = np.round(np.median(predictions))
+
+    if abs(bf - meanScore) <= 1:
+        meanScores.append(1)
+    else:
+        meanScores.append(0)
+
+    if abs(bf - medianScore) <= 1:
+        medianScores.append(1)
+    else:
+        medianScores.append(0)
+
+
+meanGrandScore = np.mean(meanScores)
+medianGrandScore = np.mean(medianScores)
+print("Mean of Votes Accuracy: {}".format(meanGrandScore))
+print("Median of Votes Accuracy: {}".format(medianGrandScore))
