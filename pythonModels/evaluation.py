@@ -8,7 +8,9 @@ import os
 import pickle
 from keras_preprocessing.image import ImageDataGenerator
 from skimage.color import rgb2gray
+import matplotlib.pyplot as plt
 
+DEMO_PLOT = True
 
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
@@ -41,6 +43,25 @@ def norm(imgs):
     return newImgs
 
 
+def plotImages(images, predictions, result, bf):
+    fig, axes = plt.subplots(1, 6)
+    fig.patch.set_visible(False)
+    fig.suptitle("Truth: {}\nPrediction: {}".format(bf, result), fontsize=36)
+    fig.subplots_adjust(top=0.88)
+    for i in range(6):
+        ax = axes[i]
+        ax.imshow(images[i])
+        ax.axis("off")
+        ax.text(0.5, -0.25, "{}".format(predictions[i]), size=24, ha="center", transform=ax.transAxes)
+        ax.set_aspect('equal')
+        ax.patch.set_visible(False)
+
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0, hspace=0)
+    figManager = plt.get_current_fig_manager()
+    figManager.window.showMaximized()
+    plt.show(True)
+
 meanScores = []
 medianScores = []
 
@@ -66,7 +87,10 @@ for _, row in data.iterrows():
 
     subImages = preProcessing.crop_and_split(compositeImage)
 
+
     normSubImages = norm(subImages)
+
+
 
     if len(normSubImages):
         X = np.array(normSubImages)
@@ -76,8 +100,11 @@ for _, row in data.iterrows():
     else:
         continue
 
-    meanScore = np.round(np.mean(predictions))
-    medianScore = np.round(np.median(predictions))
+    meanScore = int(np.round(np.mean(predictions)))
+    medianScore = int(np.round(np.median(predictions)))
+
+    if DEMO_PLOT and len(normSubImages) == 6:
+        plotImages(subImages, predictions, medianScore, bf)
 
     if abs(bf - meanScore) <= 1:
         meanScores.append(1)
