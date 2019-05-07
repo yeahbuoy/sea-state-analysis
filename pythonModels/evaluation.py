@@ -11,7 +11,7 @@ from skimage.color import rgb2gray
 import matplotlib.pyplot as plt
 
 DEMO_PLOT = True
-
+BAD_DEMO = False
 BINNED = False
 
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
@@ -50,21 +50,38 @@ def norm(imgs):
     return newImgs
 
 
-def plotImages(images, predictions, result, bf):
+def plotImages(images, predictions, result, bf, wind):
+    if abs(result - bf) <= 1:
+        verdict = "Pass"
+        if BAD_DEMO:
+            return
+    else:
+        verdict = "Fail"
+
     fig, axes = plt.subplots(1, 6)
     fig.patch.set_visible(False)
-    fig.suptitle("Truth: {}\nPrediction: {}".format(bf, result), fontsize=36)
+    # fig.suptitle("Wind Speed: {} m/s\nTrue BF: {}\nPredicted BF: {}\nVerdict: {}"\
+    #              .format(wind, bf, result, verdict), fontsize=48, ha="right", y=.9)
+    fig.text(.50, .95, "Wind Speed: \nTrue BF: \nPredicted BF: \nVerdict: ",
+             fontsize=48, ha="right", va="top")
+    fig.text(.50, .95, " {} m/s\n {}\n {}\n {}" \
+            .format(wind, bf, result, verdict), fontsize=48, ha="left", va="top")
     fig.subplots_adjust(top=0.88)
     for i in range(6):
         ax = axes[i]
         ax.imshow(images[i])
         ax.axis("off")
-        ax.text(0.5, -0.25, "{}".format(predictions[i]), size=24, ha="center", transform=ax.transAxes)
+        ax.text(0.5, -0.35, "{}".format(predictions[i]), size=48, ha="center", transform=ax.transAxes)
         ax.set_aspect('equal')
         ax.patch.set_visible(False)
 
     plt.tight_layout()
-    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.subplots_adjust(right=.97, \
+                        left=0.03, \
+                        bottom=0.0, \
+                        top=1, \
+                        wspace=.1, \
+                        hspace=0)
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
     plt.show(True)
@@ -84,6 +101,10 @@ for _, row in data.iterrows():
 
     pictureName = row["PictureName"]
     bf = int(row["BeaufortForce"])
+    wind = float(row["WindSpeed(m/s)"])
+    if wind == "MM":
+        print("Bad Image: {}".format(pictureName))
+        continue
 
     imagePath = os.path.join(IMAGE_DIRECTORY, pictureName)
 
@@ -111,7 +132,7 @@ for _, row in data.iterrows():
     medianScore = int(np.round(np.median(predictions)))
 
     if DEMO_PLOT and len(normSubImages) == 6:
-        plotImages(subImages, predictions, medianScore, bf)
+        plotImages(subImages, predictions, medianScore, bf, wind)
 
     if abs(bf - meanScore) <= 1:
         meanScores.append(1)
