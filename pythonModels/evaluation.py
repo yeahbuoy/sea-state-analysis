@@ -12,14 +12,21 @@ import matplotlib.pyplot as plt
 
 DEMO_PLOT = True
 
+BINNED = False
+
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
 CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
-PICKLE_PATH = "./savedModels/FinalGreyBin/dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
-MODEL_PATH = "./savedModels/FinalGreyBin/FinalGreyBucket3.h5"
+
+if BINNED:
+    MODEL_PATH = "./savedModels/FinalGreyBin/FinalGreyBucket3.h5"
+    PICKLE_PATH = "./savedModels/FinalGreyBin/dataframe.pkl"
+else:
+    MODEL_PATH = "./savedModels/FinalColorFull/FinalFullColor.h5"
+    PICKLE_PATH = "./savedModels/FinalColorFull/dataframeColorFull.pkl"
 
 model = load_model(MODEL_PATH)
 data = pd.read_csv(CSV_PATH)
