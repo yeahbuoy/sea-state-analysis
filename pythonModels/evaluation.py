@@ -118,7 +118,7 @@ def plotImages(images, predictions, result, bf, wind, loc):
         ax = axes[i]
         ax.imshow(images[i])
         ax.axis("off")
-        ax.text(0.5, -0.35, "{}".format(predictions[i]), size=48, ha="center", transform=ax.transAxes)
+        ax.text(0.5, -0.35, "{}".format(predictions[i]), size=44, ha="center", transform=ax.transAxes)
         ax.set_aspect('equal')
         ax.patch.set_visible(False)
 
