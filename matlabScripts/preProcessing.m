@@ -5,7 +5,8 @@
 % 'c' for crop
 % 'd' for debug
 % 'o' for otsu method
-mode = 'o';
+% 'x' to remove bad images
+mode = 'x';
 
 if mode=='r'
     path = '../data/Pictures/*.jpg';
@@ -116,5 +117,22 @@ if mode=='o'
         BW=otsu(strcat('Crops/',name));
         imshow(BW)
         pause(0.5)
+    end
+end
+
+if mode=='x'
+    del = 0;
+    count = 0;
+    path = 'Crops/*.jpg';
+    pics = dir(path);
+    for pic = pics'
+        name = pic.name;
+        K = imread(name);
+        [height, width] = size(K);
+        if (width<50 || height<50)
+            delete(strcat('Crops/',name))
+            del = del + 1;
+        end
+        count = count + 1;
     end
 end

@@ -1,8 +1,9 @@
 clear;
 clc;
 
-I=imread('sample4.png');
+I=imread('ship7.png');
 I=imresize(I,[272 479]);
+figure, imshow(I, 'Border', 'tight')
 %PSF = fspecial('gaussian',60,10);
 %edgesTapered = edgetaper(I,PSF);
 BW=rgb2gray(I);
