@@ -16,9 +16,7 @@ BINNED = False
 
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
-CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
-SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 
 if BINNED:
@@ -27,6 +25,8 @@ if BINNED:
 else:
     MODEL_PATH = "./savedModels/FinalColorFull/FinalFullColor.h5"
     PICKLE_PATH = "./savedModels/FinalColorFull/dataframeColorFull.pkl"
+
+plt.switch_backend('Qt5Agg')
 
 model = load_model(MODEL_PATH)
 data = pd.read_csv(CSV_PATH)
@@ -50,7 +50,8 @@ def location(img):
         "Z48A": "WEST BERMUDA - 240 NM West of Bermuda",
         "Z80A": "SOUTH BERMUDA - 300 NM SSE of Bermuda",
         "Z92A": "CORPUS CHRISTI, TX - 60NM SSE of Corpus Christi, TX",
-        "Z71A": "GALVESTON,TX -  22 NM East of Galveston, TX",
+        "Z17A": "GALVESTON,TX -  22 NM East of Galveston, TX",
+        "Z71A": "BAY OF CAMPECHE - 214 NM NE of Veracruz",
         "Z41A": "Central Caribbean - 210 NM SSE of Kingston, Jamaica",
         "Z37A": "Eastern Caribbean Sea - 180 NM SSW of Ponce, PR",
         "Z04A": "Caribbean Valley - 63 NM WSW of Montserrat",
@@ -66,7 +67,7 @@ def location(img):
         "Z26A": "POINT ARENA - 19NM North of Point Arena, CA",
         "Z08A": "STONEWALL BANK - 20NM West of Newport, OR",
         "Z91A": "EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",
-        "Z57A": "WEST SANTA BARBARA  38 NM West of Santa Barbara, CA",
+        "Z57A": "WEST SANTA BARBARA - 38 NM West of Santa Barbara, CA",
         "Z29A": "WEST CALIFORNIA - 357NM West of San Francisco, CA",
         "Z07A": "NW HAWAII ONE - 188 NM NW of Kauai Island, HI",
         "Z59A": "SE HAWAII - 205 NM Southeast of Hilo, HI",
@@ -145,10 +146,9 @@ for _, row in data.iterrows():
     if i % 10 == 0:
         print("{} / {}".format(i, numImages))
 
-
     pictureName = row["PictureName"]
     bf = int(row["BeaufortForce"])
-    wind = float(row["WindSpeed(m/s)"])
+    wind = row["WindSpeed(m/s)"]
     if wind == "MM":
         print("Bad Image: {}".format(pictureName))
         continue
@@ -162,10 +162,7 @@ for _, row in data.iterrows():
 
     subImages = preProcessing.crop_and_split(compositeImage)
 
-
     normSubImages = norm(subImages)
-
-
 
     if len(normSubImages):
         X = np.array(normSubImages)
@@ -180,7 +177,7 @@ for _, row in data.iterrows():
 
     if DEMO_PLOT and len(normSubImages) == 6 and location(pictureName) != "UNKNOWN":
         plotImages(subImages, predictions, medianScore, bf, wind, location(pictureName))
-    elif location(pictureName) != "UNKNOWN":
+    elif location(pictureName) == "UNKNOWN":
         print("Unknown Camera Prefix: {}".format(pictureName[0:4]))
 
     if abs(bf - meanScore) <= 1:
