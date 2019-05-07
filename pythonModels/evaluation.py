@@ -141,6 +141,9 @@ numImages = len(data)
 
 data = data.sample(frac=1)
 i = 0
+
+if DEMO_PLOT:
+    input("Press [Enter] to Continue")
 for _, row in data.iterrows():
     i += 1
     if i % 10 == 0:
