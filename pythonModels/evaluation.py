@@ -55,7 +55,7 @@ def location(img):
         "Z37A": "Eastern Caribbean Sea - 180 NM SSW of Ponce, PR",
         "Z04A": "Caribbean Valley - 63 NM WSW of Montserrat",
         "Z64A": "NANTUCKET SOUND",
-        "Z25A": "New York Harbor Entrance - 15 NM SE of Breezy Point , NY",
+        "Z25A": "NY Harbor Entrance - 15 NM SE of Breezy Point , NY",
         "Z76A": "NORTH MICHIGAN - Halfway between North Manitou and Washington Islands.",
         "Z78A": "EAST SUPERIOR - 70 NM NE Marquette, MI",
         "W31A": "SOUTH MICHIGAN - 43NM East Southeast of Milwaukee, WI",
@@ -63,14 +63,14 @@ def location(img):
         "Z98A": "WEST OREGON - 275NM West of Coos Bay, OR",
         "W04A": "SOUTHEAST PAPA - 600NM West of Eureka, CA",
         "Z23A": "BODEGA BAY - 48NM NW of San Francisco, CA",
-        "Z26A": "PT ARENA - 19NM North of Point Arena, CA",
+        "Z26A": "POINT ARENA - 19NM North of Point Arena, CA",
         "Z08A": "STONEWALL BANK - 20NM West of Newport, OR",
         "Z91A": "EAST SANTA BARBARA  - 12NM Southwest of Santa Barbara, CA",
         "Z57A": "WEST SANTA BARBARA  38 NM West of Santa Barbara, CA",
         "Z29A": "WEST CALIFORNIA - 357NM West of San Francisco, CA",
-        "Z07A": "NORTHWESTERN HAWAII ONE - 188 NM NW of Kauai Island, HI",
-        "Z59A": "SOUTHEAST HAWAII - 205 NM Southeast of Hilo, HI",
-        "Z35A": "NORTHWESTERN HAWAII TWO - 186 NM NW of Kauai Is., HI"
+        "Z07A": "NW HAWAII ONE - 188 NM NW of Kauai Island, HI",
+        "Z59A": "SE HAWAII - 205 NM Southeast of Hilo, HI",
+        "Z35A": "NW HAWAII TWO - 186 NM NW of Kauai Is., HI"
     }
 
     return locations.get(id, "UNKNOWN")
@@ -95,7 +95,7 @@ def norm(imgs):
     return newImgs
 
 
-def plotImages(images, predictions, result, bf, wind):
+def plotImages(images, predictions, result, bf, wind, loc):
     if abs(result - bf) <= 1:
         verdict = "Pass"
         if BAD_DEMO:
@@ -103,14 +103,16 @@ def plotImages(images, predictions, result, bf, wind):
     else:
         verdict = "Fail"
 
+
+    loc = loc.split("-")[0].upper()
     fig, axes = plt.subplots(1, 6)
     fig.patch.set_visible(False)
     # fig.suptitle("Wind Speed: {} m/s\nTrue BF: {}\nPredicted BF: {}\nVerdict: {}"\
     #              .format(wind, bf, result, verdict), fontsize=48, ha="right", y=.9)
-    fig.text(.50, .95, "Wind Speed: \nTrue BF: \nPredicted BF: \nVerdict: ",
-             fontsize=48, ha="right", va="top")
-    fig.text(.50, .95, " {} m/s\n {}\n {}\n {}" \
-            .format(wind, bf, result, verdict), fontsize=48, ha="left", va="top")
+    fig.text(.50, .97, "Location: \nWind Speed: \nTrue BF: \nPredicted BF: \nVerdict: ",
+             fontsize=44, ha="right", va="top")
+    fig.text(.50, .97, " {} \n {} m/s\n {}\n {}\n {}" \
+            .format(loc, wind, bf, result, verdict), fontsize=44, ha="left", va="top")
     fig.subplots_adjust(top=0.88)
     for i in range(6):
         ax = axes[i]
@@ -176,8 +178,10 @@ for _, row in data.iterrows():
     meanScore = int(np.round(np.mean(predictions)))
     medianScore = int(np.round(np.median(predictions)))
 
-    if DEMO_PLOT and len(normSubImages) == 6:
-        plotImages(subImages, predictions, medianScore, bf, wind)
+    if DEMO_PLOT and len(normSubImages) == 6 and location(pictureName) != "UNKNOWN":
+        plotImages(subImages, predictions, medianScore, bf, wind, location(pictureName))
+    elif location(pictureName) != "UNKNOWN":
+        print("Unknown Camera Prefix: {}".format(pictureName[0:4]))
 
     if abs(bf - meanScore) <= 1:
         meanScores.append(1)
