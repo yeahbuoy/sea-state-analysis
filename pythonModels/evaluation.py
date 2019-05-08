@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 DEMO_PLOT = True
 BAD_DEMO = False
 BINNED = False
+DISPLAY = True
 
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
@@ -96,14 +97,13 @@ def norm(imgs):
     return newImgs
 
 
-def plotImages(images, predictions, result, bf, wind, loc):
+def plotImages(images, predictions, result, bf, wind, loc, pictureName, mode):
     if abs(result - bf) <= 1:
         verdict = "Pass"
         if BAD_DEMO:
             return
     else:
         verdict = "Fail"
-
 
     loc = loc.split("-")[0].upper()
     fig, axes = plt.subplots(1, 6)
@@ -130,9 +130,18 @@ def plotImages(images, predictions, result, bf, wind, loc):
                         top=1, \
                         wspace=.1, \
                         hspace=0)
-    figManager = plt.get_current_fig_manager()
-    figManager.window.showMaximized()
-    plt.show(True)
+    if mode == True:
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        plt.show(True)
+    else:
+        figure = plt.gcf()
+        figure.set_size_inches(19.2, 10.8)
+
+        if verdict == "Pass":
+                    fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/pass'), (pictureName + '.jpg')))
+        elif verdict == "Fail":
+                    fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/fail'), (pictureName + '.jpg')))
 
 meanScores = []
 medianScores = []
@@ -179,7 +188,7 @@ for _, row in data.iterrows():
     medianScore = int(np.round(np.median(predictions)))
 
     if DEMO_PLOT and len(normSubImages) == 6 and location(pictureName) != "UNKNOWN":
-        plotImages(subImages, predictions, medianScore, bf, wind, location(pictureName))
+        plotImages(subImages, predictions, medianScore, bf, wind, location(pictureName), pictureName, DISPLAY)
     elif location(pictureName) == "UNKNOWN":
         print("Unknown Camera Prefix: {}".format(pictureName[0:4]))
 
