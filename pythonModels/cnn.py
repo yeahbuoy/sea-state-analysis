@@ -11,20 +11,21 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
-from sklearn.model_selection import train_test_split
+#from sklearn.model_selection import train_test_split
 from preProcessing import preProcessing
 from keras_preprocessing.image import ImageDataGenerator
 from models import OurModels
 import numpy as np
 import pandas as pd
+from keras.utils import plot_model
 
-CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
+
+CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
 PICKLE_PATH = "./dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
 batch_size = 128
-num_classes = 10
 epochs = 50
 
 # input image dimensions
@@ -56,9 +57,10 @@ X_train, X_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.
 
 
 traindf=preProcessing.load_dataframe(IMAGE_DIRECTORY, CSV_DATA_FILE, PICKLE_PATH, SPLIT_IMAGE_OUT_PATH)
+numClasses = traindf["BeaufortNumber"].nunique()
 # shuffles the dataframe
 traindf = traindf.sample(frac=1)
-datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25)
+datagen=ImageDataGenerator(preprocessing_function=preProcessing.normalize, validation_split=0.25, horizontal_flip=True)
 train_generator=datagen.flow_from_dataframe(
     dataframe=traindf,
     directory=SPLIT_IMAGE_OUT_PATH,
@@ -87,7 +89,9 @@ validation_generator=datagen.flow_from_dataframe(
 )
 
 print("Building Model...")
-model = OurModels.george_categorical((img_rows, img_cols, 3))
+model = OurModels.transfer_learning((img_rows, img_cols), numClasses)
+
+plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
 print("Fitting Model...")
 #model.fit(X_train, y_train, epochs=5, verbose=1, batch_size=10, validation_data=(X_test, y_test))
@@ -104,7 +108,7 @@ model.fit_generator(generator=train_generator,
 #for pred, y in zip(predict, y_test):
 #    print("Predict: {}\t Actual: {}".format(pred, y))
 
-model.save('savedModel.h5')
+model.save('transfer_model.h5')
 #score = model.evaluate(X_test, y_test)
 #print(score)
 '''

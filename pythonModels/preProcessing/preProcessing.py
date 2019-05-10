@@ -1,5 +1,6 @@
 from PIL import Image
 from skimage import io
+from skimage.color import rgb2gray
 import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -37,10 +38,11 @@ def is_dark(im):
 
 
 def is_saturated(im):
-    if np.all(np.percentile(im, 80, axis=(0, 1)) >= 252):
-        return True
-    else:
-        return False
+    # if np.all(np.percentile(im, 80, axis=(0, 1)) >= 252):  ###############REMOVED BRIGHTNESS FILTER
+    #     return True
+    # else:
+    #     return False
+    return False
 
 
 def is_visible(im):
@@ -48,6 +50,14 @@ def is_visible(im):
         return True
     else:
         return False
+
+############################################################################# added this method to check for corruption
+def is_corrupted(imagePath):
+    try:
+        img = io.imread(imagePath)
+    except:
+        return True
+    return False
 
 
 def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
@@ -59,6 +69,7 @@ def load_dataframe(path, dataPath, picklePath, outPath, forceNewData = False):
     else:
         print("Generating new dataframe...")
         dataframe = generate_dataframe(path, dataPath, outPath)
+        dataframe = dataframe.sample(frac=1)
         with open(picklePath, "wb") as pickleFile:
             pickle.dump(dataframe, pickleFile)
 
@@ -73,18 +84,25 @@ def normalize(im):
 
 
 def generate_dataframe(path, dataPath, outPath):
+    print("Generating DataFrame from {}".format(dataPath))
     rows = []
-    beaufortData = pd.read_csv(dataPath, index_col="PictureName")
+    beaufortData = pd.read_csv(dataPath, index_col="PictureName", error_bad_lines=False)
+    numImages = len(os.listdir(path))
+    imageCount = 1
     for imagename in os.listdir(path):
+        print("Image {}/{}".format(imageCount, numImages))
+        imageCount += 1
         if imagename not in beaufortData.index:
             print("Missing PictureData: {}".format(imagename))
             continue
         imagepath = os.path.join(path, imagename)
+        #if(not is_corrupted(imagepath)):           ############################## this is where I check for corruption
         im = io.imread(imagepath)
         df_row = beaufortData.loc[imagename]
         beaufort_number = df_row["BeaufortForce"]
         wind_speed = df_row["WindSpeed(m/s)"]
-        wave_height = df_row["WaveHeight(m)"]
+        #wave_height = df_row["WaveHeight(m)"] ############################### WaveHeight was erroring so just made it one always
+        wave_height = 1
 
         if str(wind_speed) == "nan" or str(wind_speed) == "nan":
             continue
@@ -100,9 +118,15 @@ def generate_dataframe(path, dataPath, outPath):
         for i in range(6):
             if not is_visible(cropped_and_split[i]):
                 continue
+            greyScale = rgb2gray(cropped_and_split[i])
             subImage_name = "{}_{}.jpg".format(imagename[:-4], i)
             rows.append((subImage_name, beaufort_number, wind_speed, wave_height))
-            io.imsave(os.path.join(outPath, subImage_name), cropped_and_split[i], plugin="pil", quality=100)
+            io.imsave(os.path.join(outPath, subImage_name), greyScale, plugin="pil", quality=100)
+
+        '''
+        else:                                           ############################### here's the catch
+            print("error opening image: "+ imagepath)
+        '''
 
     df = pd.DataFrame.from_records(rows,
                                    columns=["PictureName", "BeaufortNumber", "WindSpeed", "WaveHeight"],

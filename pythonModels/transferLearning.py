@@ -15,8 +15,13 @@ from keras import metrics
 from preProcessing import preProcessing
 from keras.optimizers import Adam
 
-CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
-IMAGE_DIRECTORY = "../data/Pictures"
+
+# CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
+# IMAGE_DIRECTORY = "../data/Pictures"
+# PICKLE_PATH = "./dataframe.pkl"
+# SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
+CSV_DATA_FILE = "../data/scraped-data.csv"
+IMAGE_DIRECTORY = "../data/scraped"
 PICKLE_PATH = "./dataframe.pkl"
 SPLIT_IMAGE_OUT_PATH = "../data/split_pictures"
 
@@ -39,7 +44,7 @@ x=GlobalAveragePooling2D()(x)
 x=Dense(1024,activation='relu')(x) #we add dense layers so that the model can learn more complex functions and classify for better results.
 x=Dense(1024,activation='relu')(x) #dense layer 2
 x=Dense(512,activation='relu')(x) #dense layer 3
-preds=Dense(11,activation='softmax')(x) #final layer with softmax activation
+preds=Dense(8,activation='softmax')(x) #final layer with softmax activation
 model=Model(inputs=base_model.input,outputs=preds)
 
 ## simply for checking layers, comment out as needed

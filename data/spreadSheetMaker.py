@@ -272,3 +272,4 @@ with myFile:
 
 #checks to see if there are any empty slots, and prints out the image name if there was
 checkSpreadSheet()
+

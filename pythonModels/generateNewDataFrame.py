@@ -1,5 +1,5 @@
 from preProcessing import preProcessing
-CSV_DATA_FILE = "../data/CoolSpreadSheet.csv"
+CSV_DATA_FILE = "../data/CombinedSpreadSheet.csv"
 IMAGE_DIRECTORY = "../data/Pictures"
 PICKLE_PATH = "./dataframe.pkl"
 OUT_PATH = "../data/split_pictures"
