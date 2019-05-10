@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 DEMO_PLOT = True
 BAD_DEMO = False
 BINNED = False
-DISPLAY = True
+DISPLAY = False
 
 CSV_PATH = "../data/CombinedSpreadSheet.csv"
 
@@ -130,7 +130,7 @@ def plotImages(images, predictions, result, bf, wind, loc, pictureName, mode):
                         top=1, \
                         wspace=.1, \
                         hspace=0)
-    if mode == True:
+    if mode:
         figManager = plt.get_current_fig_manager()
         figManager.window.showMaximized()
         plt.show(True)
@@ -138,10 +138,14 @@ def plotImages(images, predictions, result, bf, wind, loc, pictureName, mode):
         figure = plt.gcf()
         figure.set_size_inches(19.2, 10.8)
 
-        if verdict == "Pass":
-                    fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/pass'), (pictureName + '.jpg')))
-        elif verdict == "Fail":
-                    fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/fail'), (pictureName + '.jpg')))
+        fig.savefig(os.path.join("../data/Results", verdict, str(bf), pictureName + ".jpg"))
+
+        # if verdict == "Pass":
+        #             fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/pass'), (pictureName + '.jpg')))
+        # elif verdict == "Fail":
+        #             fig.savefig(os.path.join(('../data/Results/' + str(bf) + '/fail'), (pictureName + '.jpg')))
+
+    plt.close(plt.gcf())
 
 meanScores = []
 medianScores = []
@@ -149,14 +153,14 @@ medianScores = []
 numImages = len(data)
 
 data = data.sample(frac=1)
-i = 0
+imgNum = 0
 
 if DEMO_PLOT:
     input("Press [Enter] to Continue")
 for _, row in data.iterrows():
-    i += 1
-    if i % 10 == 0:
-        print("{} / {}".format(i, numImages))
+    imgNum += 1
+    if imgNum % 10 == 0:
+        print("{} / {}".format(imgNum, numImages))
 
     pictureName = row["PictureName"]
     bf = int(row["BeaufortForce"])
@@ -187,9 +191,15 @@ for _, row in data.iterrows():
     meanScore = int(np.round(np.mean(predictions)))
     medianScore = int(np.round(np.median(predictions)))
 
-    if DEMO_PLOT and len(normSubImages) == 6 and location(pictureName) != "UNKNOWN":
+    darkList = [i for i in range(6) if not preProcessing.is_visible(subImages[i])]
+
+    for i in darkList:
+        predictions.insert(i, "NA")
+
+    # if DEMO_PLOT and len(normSubImages) == 6 and location(pictureName) != "UNKNOWN":
+    if DEMO_PLOT:
         plotImages(subImages, predictions, medianScore, bf, wind, location(pictureName), pictureName, DISPLAY)
-    elif location(pictureName) == "UNKNOWN":
+    if location(pictureName) == "UNKNOWN":
         print("Unknown Camera Prefix: {}".format(pictureName[0:4]))
 
     if abs(bf - meanScore) <= 1:
